@@ -85,9 +85,19 @@ public class ModelAdvancedPony extends ModelBiped {
     
     private void init(float scale) {
     	if (torso_front != null) return;
-    	bipedBody = torso_front = addBox(box(), 8, 24, -4, -3.5f, 0, 8, 7, 8, scale, 0, 8.5f, -6);
+    	bipedBody = torso_front = box();
+    	addPlane(torso_front, 8, 24, -4, -3.5f, 4, 8, 7, 4, scale, 0, 8.5f, -6)
+    	.setSideVisibility(5, false).setSideVisibility(4, false).setTopFaceUV(8, 32).setBottomFaceUV(8, 40).setSouthFaceUV(36, 20).setNorthFaceUV(32, 20);
+    	
+    	addPlane(torso_front, 8, 24, -4, -3.5f, 0, 8, 7, 4, scale, 0, 8.5f, -6)
+    	.setSideVisibility(5, false).setTopFaceUV(8, 36).setBottomFaceUV(8, 44).setEastFaceUV(20, 20).setSouthFaceUV(16, 20).setNorthFaceUV(28, 20);
+    	
     	ModelRenderer TorsoRear = box(torso_front);
-		addBoxUV(TorsoRear, 8, 32, -4, -4, 0, 8, 8, 8, scale, 0, 0, 8).setTopFaceUV(0, 32).setBottomFaceUV(0, 40);
+    	addPlane(TorsoRear, 8, 32, -4, -4, 0, 8, 8, 4, scale, 0, 0, 8)
+    	.setSideVisibility(5, false).setTopFaceUV(0, 36).setBottomFaceUV(0, 44).setEastFaceUV(20, 36).setSouthFaceUV(16, 32).setNorthFaceUV(28, 32);
+    	
+    	addPlane(TorsoRear, 8, 32, -4, -4, 4, 8, 8, 4, scale, 0, 0, 8)
+    	.setSideVisibility(4, false).setTopFaceUV(0, 32).setBottomFaceUV(0, 40).setWestFaceUV(32, 36).setSouthFaceUV(16, 44).setNorthFaceUV(28, 44);
         
         addHead(scale);
         addTail(scale, TorsoRear);
@@ -149,10 +159,10 @@ public class ModelAdvancedPony extends ModelBiped {
     
     private void addWings(float scale) {
         left_wing_closed = addBox(box(torso_front), 49, 48, 0, -3.5f, 0, 2, 6, 5, scale, 4, 0, 4);
-        addBox(box(left_wing_closed), 32, 26, -1, -3, 0, 2, 4, 2, scale, 1, 0.5f, 5); // Left Wing 2
+        addBox(box(left_wing_closed), 32, 30, -1, -3, 0, 2, 4, 2, scale, 1, 0.5f, 5); // Left Wing 2 //32,26
         
         right_wing_closed = addBox(mirror(torso_front), 41, 32, 0, -3.5f, 0, 2, 6, 5, scale, -6, 0, 4);
-        addBox(mirror(right_wing_closed), 32, 20, -1, -3, 0, 2, 4, 2, scale, 1, 0.5f, 5); // Right Wing 2
+        addBox(mirror(right_wing_closed), 20, 30, -1, -3, 0, 2, 4, 2, scale, 1, 0.5f, 5); // Right Wing 2 //32,20
         
         addFlatWings(scale);
         addBatWings(scale);

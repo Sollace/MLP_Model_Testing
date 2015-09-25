@@ -3,7 +3,9 @@ package com.minelittlepony.render;
 import com.minelittlepony.model.ModelAdvancedPony;
 
 import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -11,6 +13,7 @@ import net.minecraft.client.renderer.entity.layers.LayerArrow;
 import net.minecraft.client.renderer.entity.layers.LayerCape;
 import net.minecraft.client.renderer.entity.layers.LayerDeadmau5Head;
 import net.minecraft.client.renderer.entity.layers.LayerHeldItem;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EnumPlayerModelParts;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
@@ -25,12 +28,15 @@ public class RenderPony extends RenderPlayer {
     
 	private static final ResourceLocation DARING_DOO = new ResourceLocation("minelittlepony", "textures/entity/steve.png");
 	
+	private ModelBase oldModel;
+	
     public RenderPony(RenderManager renderManager) {
         this(renderManager, false);
     }
 
     public RenderPony(RenderManager renderManager, boolean useSmallArms) {
         super(renderManager, useSmallArms);
+        oldModel = mainModel;
         mainModel = new ModelAdvancedPony(0, false);
         layerRenderers.clear();
         addLayer(new LayerPonyArmour(this));
@@ -46,10 +52,22 @@ public class RenderPony extends RenderPlayer {
         return (ModelAdvancedPony)mainModel;
     }
     
+    //Return the old one, so code we can't override doesn't break
+    public ModelPlayer getPlayerModel() {
+        return (ModelPlayer)(oldModel != null ? oldModel : mainModel);
+    }
+    
     public ModelBase getMainModel() {
         return getPonyModel();
     }
-
+    
+    public void doRender(AbstractClientPlayer clientPlayer, double p_180596_2_, double p_180596_4_, double p_180596_6_, float p_180596_8_, float p_180596_9_) {
+        if (!clientPlayer.isUser() || renderManager.livingPlayer == clientPlayer) {
+            setModelVisibilities(clientPlayer);
+            super.doRender(clientPlayer, p_180596_2_, p_180596_4_, p_180596_6_, p_180596_8_, p_180596_9_);
+        }
+    }
+    
     protected void setModelVisibilities(AbstractClientPlayer clientPlayer) {
     	ModelAdvancedPony model = getPonyModel();
 
