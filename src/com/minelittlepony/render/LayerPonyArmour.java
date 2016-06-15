@@ -5,17 +5,19 @@ import java.util.Map;
 
 import com.minelittlepony.model.ModelAdvancedPony;
 
-import net.minecraft.client.renderer.entity.RendererLivingEntity;
+import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.layers.LayerArmorBase;
 import net.minecraft.client.renderer.entity.layers.LayerBipedArmor;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
+@SuppressWarnings("unchecked")
 public class LayerPonyArmour extends LayerBipedArmor {
 	
-	protected static Map armourTexturesMap;
+	protected static Map<String, ResourceLocation> armourTexturesMap;
 	
 	static {
 		try {
@@ -23,7 +25,7 @@ public class LayerPonyArmour extends LayerBipedArmor {
 			for (Field i : fields) {
 				if (i.getType() == Map.class) {
 					i.setAccessible(true);
-					armourTexturesMap = (Map)i.get(null);
+					armourTexturesMap = (Map<String, ResourceLocation>)i.get(null);
 				}
 			}
 		} catch (IllegalArgumentException e) {
@@ -33,25 +35,22 @@ public class LayerPonyArmour extends LayerBipedArmor {
 		}
 	}
 	
-	public LayerPonyArmour(RendererLivingEntity rendererIn) {
+	public LayerPonyArmour(RenderLivingBase<?> rendererIn) {
 		super(rendererIn);
 	}
 	
-	protected void func_177177_a() {
-        field_177189_c = new ModelAdvancedPony(0.5F, true);
-        field_177186_d = new ModelAdvancedPony(1.0F, true);
+	protected void initArmor() {
+		modelLeggings = new ModelAdvancedPony(0.5F, true);
+		modelArmor = new ModelAdvancedPony(1.0F, true);
     }
 	
-	public void doRenderLayer(EntityLivingBase entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float armorSlot) {
-		for (int i = 1; i < 5; i++) {
-			ItemStack armourStack = getCurrentArmor(entitylivingbaseIn, i);
-			if (armourStack != null && armourStack.getItem() instanceof ItemArmor) {
-				ItemArmor item = (ItemArmor)armourStack.getItem();
-				updateArmourResource(item);
-			}
+	public ItemStack getItemStackFromSlot(EntityLivingBase living, EntityEquipmentSlot slotIn) {
+		ItemStack armourStack = super.getItemStackFromSlot(living, slotIn);
+		if (armourStack != null && armourStack.getItem() instanceof ItemArmor) {
+			ItemArmor item = (ItemArmor)armourStack.getItem();
+			updateArmourResource(item);
 		}
-		super.doRenderLayer(entitylivingbaseIn, p_177141_2_, p_177141_3_, partialTicks, p_177141_5_, p_177141_6_, p_177141_7_, armorSlot);
-		
+		return armourStack;
 	}
 	
 	private void updateArmourResource(ItemArmor item) {

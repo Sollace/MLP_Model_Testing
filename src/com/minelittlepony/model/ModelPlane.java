@@ -1,7 +1,7 @@
 package com.minelittlepony.model;
 
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.VertexBuffer;
 
 public class ModelPlane extends ModelUVMappedBox {
 	
@@ -25,7 +25,7 @@ public class ModelPlane extends ModelUVMappedBox {
     	return this;
     }
     
-    public void render(WorldRenderer renderer, float scale) {
+    public void render(VertexBuffer renderer, float scale) {
         for (int i = 0; i < this.quadList.length; i++) {
         	if (!sidesHidden[i]) {
         		quadList[i].draw(renderer, scale);

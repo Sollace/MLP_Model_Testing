@@ -4,7 +4,6 @@ import com.minelittlepony.main.FlyState;
 import com.minelittlepony.main.Race;
 import com.minelittlepony.main.TailLength;
 
-import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -12,8 +11,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EnumPlayerModelParts;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
  
 /**
  * AdvancedPony - Lyra_Hartstrings
@@ -24,21 +24,16 @@ public class ModelAdvancedPony extends ModelBiped {
     
 	private final boolean isArmour;
 	
-	private float rock = 0;
+	public float rock = 0, roll = 0;
     private float hoverMovement = 0;
 	
 	public Race entityRace;
 	public FlyState entityFlyState;
 	
+	public boolean elytra = false;
+	
 	//90 degree angle. Used for setting positions
 	private static final float QUARTER = (float)Math.PI/2;
-	
-	/*ModelBiped variables. Unquote these if changing parent class to ModelBase
-	 * public int heldItemLeft;
-	 * public int heldItemRight;
-	 * public boolean isSneak;
-	 * public boolean aimedBow;
-	 */
 	
 	//Top level boxes
     private ModelRenderer head;
@@ -266,6 +261,21 @@ public class ModelAdvancedPony extends ModelBiped {
         		GlStateManager.rotate(rock * 20, 0, 0, 1);
         	} else {
         		rock = 0;
+        		roll = 0;
+        	}
+        	
+        	if (!elytra && entityFlyState != FlyState.LANDED) {
+        		double strafing = entity.motionY * 50;
+        		if (strafing != 0) {
+        			if (Math.abs(roll) < Math.abs(strafing)) {
+        				roll += strafing;
+        			}
+        		} else {
+        			roll *= 0.8;
+        		}
+        		GlStateManager.rotate(-roll, 1, 0, 0);
+        	} else {
+        		roll = 0;
         	}
         }
     	
@@ -365,19 +375,33 @@ public class ModelAdvancedPony extends ModelBiped {
 					knee_back_right.rotateAngleX += 2;
 				} else if (entity.isSprinting()) {
 					neck.rotateAngleX += QUARTER/4;
+					head.rotateAngleX -= QUARTER/3;
 				}
 				
+				leg_front_right.rotateAngleY = 0.0F;
+				leg_front_right.rotateAngleZ = 0.0F;
+				
 				if (!entityRace.canCast()) {
-					if (heldItemLeft != 0) {
-						knee_front_left.rotateAngleX = 0;
-			        	leg_front_left.rotateAngleX = leg_front_left.rotateAngleX/3 - ((float)Math.PI/10)*(float)heldItemLeft;
-			        	leg_front_left.rotateAngleZ = -((float)Math.PI/30);
-					}
+					switch (leftArmPose) {
+			            case EMPTY:
+			                break;
+			            case BLOCK:
+			            case ITEM:
+			            	knee_front_left.rotateAngleX = 0;
+			            	leg_front_left.rotateAngleX = leg_front_left.rotateAngleX/3 - (float)Math.PI/10;
+			            	leg_front_left.rotateAngleZ = -((float)Math.PI/30);
+		                default:
+			        }
 					
-			    	if (heldItemRight == 1 || heldItemRight == 3) {
-			    		knee_front_right.rotateAngleX = 0;
-			        	leg_front_right.rotateAngleX = leg_front_right.rotateAngleX/3 - ((float)Math.PI/6)*(float)heldItemRight;
-			        	leg_front_right.rotateAngleZ = ((float)Math.PI/20);
+					switch (rightArmPose) {
+			            case EMPTY:
+			                break;
+			            case BLOCK:
+			            case ITEM:
+			            	knee_front_right.rotateAngleX = 0;
+			            	leg_front_right.rotateAngleX = leg_front_right.rotateAngleX/3 - (float)Math.PI/10;
+			            	leg_front_right.rotateAngleZ = (float)Math.PI/20;
+		                default:
 			        }
 				}
 	    	} else if (entityFlyState == FlyState.HOVERING) {
@@ -413,10 +437,16 @@ public class ModelAdvancedPony extends ModelBiped {
     		updateArmSwing(leg_front_right);
     	}
     	
-    	if (!entityRace.canCast() && aimedBow) {
-    		knee_front_right.rotateAngleX = 0;
-    		leg_front_right.rotateAngleX = -QUARTER - 0.1f;
-    		leg_front_right.rotateAngleY = -0.1f;
+    	if (!entityRace.canCast()) {
+    		if (rightArmPose == ArmPose.BOW_AND_ARROW) {
+    			knee_front_right.rotateAngleX = 0;
+        		leg_front_right.rotateAngleX = -QUARTER - 0.1f;
+        		leg_front_right.rotateAngleY = -0.1f;
+    		} else if (leftArmPose == ArmPose.BOW_AND_ARROW) {
+    			knee_front_left.rotateAngleX = 0;
+        		leg_front_left.rotateAngleX = -QUARTER - 0.1f;
+        		leg_front_left.rotateAngleY = -0.1f;
+    		}
     	}
     	
     	if (entityFlyState != FlyState.LANDED) {
@@ -471,17 +501,6 @@ public class ModelAdvancedPony extends ModelBiped {
         arm.rotateAngleY += swing * 2.0F;
         arm.rotateAngleZ += MathHelper.sin(swingProgress * (float)Math.PI) * -0.4F;
     }
-        
-    public void setModelAttributes(ModelBase model) {
-        super.setModelAttributes(model);
-        if (model instanceof ModelBiped) {
-            ModelBiped var2 = (ModelBiped)model;
-            heldItemLeft = var2.heldItemLeft;
-            heldItemRight = var2.heldItemRight;
-            isSneak = var2.isSneak;
-            aimedBow = var2.aimedBow;
-        }
-    }
     
     public void setInvisible(boolean invisible) {
         head.showModel = invisible;
@@ -497,7 +516,8 @@ public class ModelAdvancedPony extends ModelBiped {
         right_wing_flat.showModel = invisible;
     }
     
-    public void postRenderArm(float scale) {
+    public void postRenderArm(float scale, EnumHandSide side) {
+    	ModelRenderer arm = getArmForSide(side);
     	if (!entityRace.canCast()) {
     		if (entityFlyState == FlyState.HOVERING) {
     			GlStateManager.translate(0.0625F, hoverMovement + 0.7675F, -0.1325F);
@@ -507,10 +527,10 @@ public class ModelAdvancedPony extends ModelBiped {
     	} else {
     		GlStateManager.translate(0.0625F, 0, -0.4525F);
     		GlStateManager.rotate(-45, 1, 0, 0);
-    		leg_front_right.rotateAngleX = 0;
-    		if (swingProgress > -9990) updateArmSwing(leg_front_right);
+    		arm.rotateAngleX = 0;
+    		if (swingProgress > -9990) updateArmSwing(arm);
     	}
-        leg_front_right.postRender(scale);
+    	arm.postRender(scale);
     }
     
     public void renderLeftArm() {
@@ -554,7 +574,10 @@ public class ModelAdvancedPony extends ModelBiped {
     }
     
     private FlyState getEntityFlyState(Entity entity) {
-    	if (entityRace.canFly() && !entity.onGround && !isRiding) {
+    	if (entityRace.canFly() && !entity.onGround && !isRiding || (entity instanceof EntityPlayer && ((EntityPlayer)entity).isElytraFlying())) {
+    		if ((entity instanceof EntityPlayer && ((EntityPlayer)entity).isElytraFlying())) {
+    			return FlyState.DASHING;
+    		}
     		if ((entity instanceof EntityPlayer && ((EntityPlayer)entity).capabilities.isFlying) || !isEntityOnFluid(entity)) {
 	    		if (MathHelper.sqrt_double(entity.motionX * entity.motionX + entity.motionZ * entity.motionZ) > 0.5f) {
 	    			return FlyState.DASHING;
@@ -567,14 +590,14 @@ public class ModelAdvancedPony extends ModelBiped {
     
     private boolean isEntityOnFluid(Entity entity) {
     	int yy = MathHelper.floor_double(entity.posY - 0.1d - entity.getYOffset() - (entity.onGround ? 0d : 0.25d));
-    	return entity.isInWater() || entity.isInLava() || entity.worldObj.getBlockState(new BlockPos(MathHelper.floor_double(entity.posX), yy, MathHelper.floor_double(entity.posZ))).getBlock().getMaterial().isLiquid();
+    	return entity.isInWater() || entity.isInLava() || entity.worldObj.getBlockState(new BlockPos(MathHelper.floor_double(entity.posX), yy, MathHelper.floor_double(entity.posZ))).getMaterial().isLiquid();
     }
     
     private TailLength getEntityTailLength(Entity entity) {
     	return TailLength.FULL;
     }
     
-    private ModelRenderer getLeftWing() {
+    public ModelRenderer getLeftWing() {
     	switch (entityRace) {
 	    	case ALICORN:
 	    	case PEGASUS: return left_wing_pega;
@@ -584,7 +607,7 @@ public class ModelAdvancedPony extends ModelBiped {
     	}
     }
     
-    private ModelRenderer getRightWing() {
+    public ModelRenderer getRightWing() {
     	switch (entityRace) {
 	    	case ALICORN:
 	    	case PEGASUS: return right_wing_pega;
